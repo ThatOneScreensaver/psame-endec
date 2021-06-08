@@ -1,45 +1,105 @@
 #include "../Encoder/Encoder.h"
 #include <windows.h>
+#include <windowsx.h>
 #include <new>
 #include <string>
 #include <future>
 #define ID_BUTTON1 0x8801
 #define ID_BUTTON2 0x8802
-struct StateInfo
+
+struct AppStateInfo
 {
 
 };
+
 struct globals
 {
 
 };
+
 DWORD WINAPI playback()
 {
     return PlaySound(L"pcm.wav", NULL, SND_SYNC | SND_NODEFAULT);
 }
-inline StateInfo* GetAppState(HWND hwnd)
+
+inline AppStateInfo* GetAppState(HWND hwnd)
 {
     LONG_PTR ptr = GetWindowLongPtr(hwnd, GWLP_USERDATA);
-    StateInfo* pState = reinterpret_cast<StateInfo*>(ptr);
+    AppStateInfo* pState = reinterpret_cast<StateInfo*>(ptr);
     return pState;
 }
+
 void OnResize(HWND hwnd)
 {
     SetWindowPos(hwnd, NULL, NULL, NULL, 600, 300, SWP_NOMOVE | SWP_NOOWNERZORDER);
 }
 
+void OnCommand(HWND hwnd, int cmdID, HWND hwndCtl, UINT codeNotify)
+{
+    switch(cmdID)
+    {
+        case ID_BUTTON1:
+        {
+            DWORD threadID;
+            HANDLE thread = CreateThread(nullptr, 0, playback, nullptr, 0, &threadID);
+        }
+
+        case ID_BUTTON2:
+        {
+            std::string alert = "ZCZC-WXR-TOR-0234-2342-3423-56675-74554-4234467+0015-1231212-12345678";
+            Encoder encoder;
+            encoder.encode(alert, 1, 7, 0, 2, 0, 1);
+        }
+    }
+}
+
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    StateInfo* pState;
-    if (uMsg == WM_CREATE)
+    int wmID = LOWORD(wParam);
+    AppStateInfo* AppState;
+
+    switch(uMsg)
     {
-        CREATESTRUCT* pCreate = reinterpret_cast<CREATESTRUCT*>(lParam);
-        pState = reinterpret_cast<StateInfo*>(pCreate->lpCreateParams);
-        SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)pState);
+        HANDLE_MSG(hwnd, WM_COMMAND,    OnCommand);
+
+        case WM_CREATE:
+        {
+            CREATESTRUCT* pCreate = reinterpret_cast<CREATESTRUCT*>(lParam)
+            AppState = reinterpret_cast<AppStateInfo*>(pCreate->lpCreateParams);
+            SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)AppState);
+            break;
+        }
+
+        case WM_DESTROY:
+        {
+            PostQuitMessage(0);
+            return 0;
+        }
+
+        case WM_PAINT:
+        {
+            PAINTSTRUCT ps;
+            HDC hdc BeginPaint(hwnd, &ps);
+
+            FillRect(hdc, &ps.rcPaint, (HBRUSH)(COLOR_WINDOW + 1));
+
+            EndPaint(hwnd, &ps);
+            return 0;
+        }
+
+        case WM_SIZE:
+        {
+            OnResize(hwnd);
+            break;
+        }
+
+        default:
+            GetAppState(hwnd);
+
     }
     else
     {
-        pState = GetAppState(hwnd);
+        AppState = GetAppState(hwnd);
     }
     if (uMsg == WM_DESTROY)
     {
@@ -97,7 +157,7 @@ void CreateButtons(HWND hwnd)
 }
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
 {
-    const wchar_t CLASS_NAME[] = L"Sample Window Class";
+    const wchar_t CLASS_NAME[] = L"easencoder";
 
     WNDCLASS wc = { };
 
@@ -107,28 +167,27 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
     RegisterClass(&wc);
 
-    StateInfo* pState;
-    pState = new (std::nothrow) StateInfo;
+    AppStateInfo* CurrentAppState;
+    CurrentAppState = new (std::nothrow) AppStateInfo;
 
-    HWND hwnd = CreateWindowEx( 0, CLASS_NAME, L"vuytr",
+    HWND hwnd = CreateWindowEx( 0, CLASS_NAME, L"pendec Interface",
         WS_OVERLAPPED | WS_MINIMIZEBOX | WS_MAXIMIZE | WS_CAPTION | WS_SYSMENU,
-        CW_USEDEFAULT, CW_USEDEFAULT, 600, 300, NULL, NULL, hInstance, pState);
+        CW_USEDEFAULT, CW_USEDEFAULT, 600, 300, nullptr, nullptr, hInstance, pState);
     CreateButtons(hwnd);
-    if (hwnd == NULL || pState == NULL)
-    {
+
+    if (hwnd == nullptr || pState == nullptr)
         return 0;
-    }
 
     ShowWindow(hwnd, nCmdShow);
 
     // Run the message loop.
 
     MSG msg = { };
-    while (GetMessage(&msg, NULL, 0, 0))
+    while (GetMessage(&msg, nullptr, 0, 0))
     {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
 
-    return 0;
+    return (int)msg.wParam;
 }

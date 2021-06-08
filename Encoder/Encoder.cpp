@@ -1,15 +1,14 @@
 #include "pch.h"
 #include "encoder.h"
 #include "../Decoder/Decoder.h"
-using std::ofstream;
-using std::string;
-void writeToFile(ofstream& file, int value, int size)
+
+void writeToFile(std::ofstream& file, int value, int size)
 	{
 		file.write(reinterpret_cast<const char*> (&value), size);
 	}
-void save(vector<double>& pcm, string fname)
+void save(std::vector<double>& pcm, std::string fname)
 {
-	ofstream audioFile;
+	std::ofstream audioFile;
 	audioFile.open(fname, std::ios::binary);
 
 	audioFile << "RIFF---WAVEfmt ";
@@ -39,11 +38,11 @@ void save(vector<double>& pcm, string fname)
 	audioFile.seekp(0 + 4);
 	writeToFile(audioFile, file_length - 8, 4);
 }
-void chartobinary(vector<bool>* Vectorptr, string c)
+void chartobinary(std::vector<bool>* Vectorptr, std::string c)
 	{
 		for (int i = 0; i < c.size() - 1; i++)
 		{
-			string output;
+			std::string output;
 			output.append(std::bitset<8>(c[i] & 0x7f).to_string());;
 
 			for (size_t j = 0; j <= output.size(); j++)
@@ -60,7 +59,7 @@ void chartobinary(vector<bool>* Vectorptr, string c)
 			}
 		}
 	}
-inline int addwave(vector<double>* Vectorptr, vector<bool>& invect)
+inline int addwave(std::vector<double>* Vectorptr, std::vector<bool>& invect)
 	{
 
 		for (size_t j = 0; j < invect.size(); j++)
@@ -86,7 +85,7 @@ inline int addwave(vector<double>* Vectorptr, vector<bool>& invect)
 		}
 		return 0;
 	}
-inline void delay(vector<double>* Vectorptr, int delay)
+inline void delay(std::vector<double>* Vectorptr, int delay)
 	{
 		double i = 0;
 		unsigned long long int j = 1;
@@ -97,7 +96,7 @@ inline void delay(vector<double>* Vectorptr, int delay)
 			j++;
 		}
 	}
-inline void effect(vector<double>* Vectorptr, unsigned int times, bool hilo)
+inline void effect(std::vector<double>* Vectorptr, unsigned int times, bool hilo)
 	{
 		unsigned int j = 0;
 		while (j <= times)
@@ -123,7 +122,7 @@ inline void effect(vector<double>* Vectorptr, unsigned int times, bool hilo)
 			j++;
 		}
 	}
-inline void attna(vector<double>* Vectorptr, int time)
+inline void attna(std::vector<double>* Vectorptr, int time)
 	{
 		int i = 0;
 		double j = 0;
@@ -134,7 +133,7 @@ inline void attna(vector<double>* Vectorptr, int time)
 			i++;
 		}
 	}
-inline void attnb(vector<double>* Vectorptr, int time)
+inline void attnb(std::vector<double>* Vectorptr, int time)
 	{
 		double j = 0;
 		int i = 0;
@@ -145,13 +144,13 @@ inline void attnb(vector<double>* Vectorptr, int time)
 			i++;
 		}
 	}
-void Encoder::encode(string alert, bool attn, int attntime, int delaybeforetone, int delaybefore, int delayafter, int delayend)
+void Encoder::encode(std::string alert, bool attn, int attntime, int delaybeforetone, int delaybefore, int delayafter, int delayend)
 {
-	vector<bool> binarydata;
-	vector<bool> EOM = {
+	std::vector<bool> binarydata;
+	std::vector<bool> EOM = {
 	0,1,0,0,1,1,1,0,0,1,0,0,1,1,1,0,0,1,0,0,1,1,1,0,0,1,0,0,1,1,1,0,
 	};
-	vector<bool> preamble = {
+	std::vector<bool> preamble = {
 		1,0,1,0,1,0,1,1,
 		1,0,1,0,1,0,1,1,
 		1,0,1,0,1,0,1,1,
@@ -169,7 +168,7 @@ void Encoder::encode(string alert, bool attn, int attntime, int delaybeforetone,
 		1,0,1,0,1,0,1,1,
 		1,0,1,0,1,0,1,1
 	};
-	vector<double> pcm;
+	std::vector<double> pcm;
 	bool peepchoice;
 	if (alert.size() % 2 != 0)
 		peepchoice = 0;
